@@ -9,9 +9,9 @@ We will have to find a suitable dataset to work with, process it, train a model 
 ## 👥  Credits
 
 **Team Members:**
-> - Member 1
-> - Member 2
-> - Member 3
+> - Betania Medina
+> - Carlos Restrepo
+> - Elius Trujillo
 
 **Academy:** 
 > - [4Geeks Academy](https://4geeksacademy.com/us/index) 
