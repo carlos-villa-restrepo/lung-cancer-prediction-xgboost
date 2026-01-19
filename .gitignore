@@ -1,7 +1,7 @@
 __pycache__
 .env
 .learn
-
+*.csv
 # Data & models folders in Data Science & Machine Learing Projecto
 # data/
 # models/
