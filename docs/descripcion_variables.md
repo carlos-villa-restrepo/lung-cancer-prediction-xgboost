@@ -162,9 +162,64 @@ No AJCC Chapter / Soft tissue sarcoma...: ¡Cuidado aquí! En tu EDA notarás qu
 
 Importancia para ML: Te sugiero filtrar tu dataset para quedarte solo con los que dicen Lung si quieres un modelo especializado en los tipos más comunes.
 
+<h3> combined Summary Stage with Expanded Regional Codes (2004+) </h3>
+Esta variable es el indicador de gravedad anatómica más completo que tienes para registros históricos (2004 en adelante). A diferencia del TNM (que es muy técnico), esta columna resume la "distancia" que ha recorrido el cáncer desde su origen en un lenguaje más descriptivo.
+
+Para un modelo de ML, esta variable es oro porque tiene una jerarquía clara de supervivencia. Aquí te explico qué significa cada valor, ordenados de menor a mayor gravedad:
+
+1. In situ
+Es el estado más temprano posible. El cáncer está "en su lugar", no ha atravesado la membrana basal ni ha invadido el tejido circundante.
+
+Impacto en ML: Supervivencia cercana al 100%.
+
+2. Localized only
+El tumor es invasivo (ya es un cáncer "real"), pero está confinado totalmente al pulmón donde empezó. No hay rastro de él en los ganglios ni en otros órganos.
+
+Impacto en ML: Alta probabilidad de éxito con cirugía solo en el sitio primario.
+
+3. Las categorías "Regional" (El cáncer empezó a viajar)
+Aquí el cáncer ya salió del pulmón original hacia los "vecinos" (tejidos o ganglios cercanos):
+
+Regional by direct extension only: Se pegó a estructuras vecinas (como la pared torácica) pero los ganglios están limpios.
+
+Regional lymph nodes involved only: El tumor en el pulmón es pequeño, pero ya se detectaron células en los ganglios linfáticos del pecho.
+
+Regional by both direct extension and lymph node involvement: Es el escenario regional más serio; el tumor creció hacia afuera e infectó los ganglios al mismo tiempo.
+
+Distant site(s)/node(s) involved:
+Es lo que conocemos como Metástasis. El cáncer ha viajado a través del torrente sanguíneo o sistema linfático a órganos lejanos (cerebro, hígado, huesos) o a ganglios muy alejados del pecho.
+
+Impacto en ML: Es el predictor más fuerte de mortalidad a corto plazo.
+
+Unknown/unstaged/unspecified/DCO:
+Significa que no hay suficiente información en el expediente médico para clasificarlo.
+
+DCO (Death Certificate Only): Casos donde solo se supo del cáncer por el certificado de defunción. Como te mencioné antes, estos registros suelen tener supervivencia de "0 meses" y pueden sesgar tu modelo.
+
 ## 4. Tratamiento y Fuente de Datos
 
 <h3>RX Summ--Surg Prim Site (1998+) :</h3> Indica si se realizó cirugía y qué tipo (ej. lobectomía, neumonectomía).
+00: Sin cirugía. No se realizó ningún procedimiento en el sitio primario.
+
+10 - 19: Cirugía local / Biopsia. Procedimientos menores donde solo se extirpó una pequeña parte de la lesión.
+
+20 - 25: Escisión local / Resección en cuña. Se quita el tumor con un pequeño margen de tejido sano, pero menos que un lóbulo.
+
+30: Resección segmentaria. Se quita un segmento completo del pulmón.
+
+33: Lobectomía con resección segmentaria. * 45 - 48: Lobectomía. Se extirpa un lóbulo completo del pulmón. Es el estándar de oro para muchos cánceres en etapa temprana.
+
+55 - 56: Bilobectomía. Se extirpan dos lóbulos (solo posible en el pulmón derecho).
+
+65 - 66: Neumonectomía. Se extirpa el pulmón completo.
+
+70: Cirugía extendida. El cirujano quitó el pulmón y además parte de la pared torácica, diafragma o pericardio.
+
+80: Cirugía, NOS. Se sabe que hubo cirugía, pero el reporte no especifica de qué tipo.
+
+90: Desconocido. No hay registro de si se operó o no.
+
+99: DCO / Autopsia. Casos donde solo se supo del cáncer tras la muerte.
 
 <h3>Reason no cancer-directed surgery :</h3> Por qué no se operó Esta variable es fundamental si quieres entender por qué un paciente con un tumor operable no llegó a quirófano.
 
