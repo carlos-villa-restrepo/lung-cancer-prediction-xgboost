@@ -2,6 +2,10 @@ __pycache__
 .env
 .learn
 *.csv
+<<<<<<< HEAD
+=======
+*.idea
+>>>>>>> 17994ec41122c4c9094f7f0efc5f44e97d93edd9
 
 # Data & models folders in Data Science & Machine Learing Projecto
 # data/
