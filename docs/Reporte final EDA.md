@@ -1,52 +1,57 @@
 # Reporte de Resultados: Modelo Predictivo de Supervivencia
 
-## Conclusión General del EDA: **El Peso de los Factores No Clínicos**
+## Conclusión General del EDA: Biología y Entorno
 
-El análisis exploratorio revela que la supervivencia de los pacientes en este dataset no es solo un fenómeno biológico, sino también estructural. Si bien la agresividad del cáncer (etapa) dicta el pronóstico base, el entorno socioeconómico actúa como un modulador crítico del tiempo de vida restante.
+El análisis exploratorio final confirma que la supervivencia es un fenómeno multifactorial. Tras la ingeniería de variables, descubrimos que la Era Médica (diagnósticos post-2010) actúa como un catalizador positivo, probablemente debido a la adopción de terapias dirigidas e inmunoterapia.
 
-## Las tres claves del estudio:
+### **Métricas Clave del Dataset Procesado**
 
-1. **La "Ventana de Oportunidad" Económica:** El nivel de ingresos es un factor determinante de supervivencia principalmente en etapas donde el tratamiento médico tiene mayor potencial curativo. Esto sugiere que las barreras económicas afectan el acceso a tratamientos de alta complejidad o seguimiento intensivo.
+| Dimensión | Variable(s) Clave | Hallazgo Crítico / Impacto |
+| :--- | :--- | :--- |
+| **Temporal** | `Year_of_diagnosis` | **Evolución Médica:** El diagnóstico reciente actúa como un factor de protección, reflejando mejoras en protocolos clínicos. |
+| **Socioeconómica** | `Income_Numeric` | **Determinante de Salud:** El nivel de ingresos es un modulador crítico que facilita el acceso a tratamientos de alta complejidad. |
+| **Clínica Base** | `Stage_Rank`, `Tumor_Size_Clean` | **Estratificación de Riesgo:** Son los predictores primarios que definen la agresividad biológica y el pronóstico base. |
+| **Carga Tumoral** | `Total_Tumors_Count`, `Is_Multicentric` | **Complejidad Sistémica:** Permite al modelo ajustar la supervivencia basándose en la dispersión del cáncer en el organismo. |
+| **Ingeniería Avanzada** | `Tumor_Age_Ratio` | **Cinética del Cáncer:** Proporciona una métrica de velocidad de crecimiento que refina la precisión en etapas intermedias. |
 
+## Resumen Ejecutivo del Modelado
 
-2. **Inequidad Persistente** El hecho de que el ingreso sea significativo incluso dentro de la misma etapa clínica (p < 0.05 en el modelo de Cox) confirma que, ante diagnósticos idénticos, los pacientes con menos recursos enfrentan un riesgo de mortalidad mayor.
+Se evolucionó de un modelo base a un XGBoost con Interacciones que permite entender cómo la quimioterapia afecta de manera distinta a cada etapa. Se logró un $R^2$ de 0.423, superando el 30% del modelo inicial.
 
+###  **Comparativa Final de Modelos**
 
-3. **Prioridad de Intervención:** Los datos justifican que los modelos predictivos futuros no pueden ignorar las variables sociales. Para mejorar la supervivencia global, no solo se requieren mejores fármacos, sino políticas que mitiguen la brecha de acceso según el nivel de ingresos.
+| Modelo | $R^2$ Score | MAE (Meses) | Estado |
+| :--- | :---: | :---: | :--- |
+| Random Forest (Base) | 0.320 | 20.00 | Superado |
+| **XGBoost (Optimizado)** | **0.423** | **14.22** | **Ganador** |
 
+## Factores Determinantes (Feature Importance)
+El modelo final prioriza las variables que realmente "mueven la aguja" en el pronóstico:
 
-## Resumen Ejecutivo:
+- **Etapa del Cáncer (Stage_Rank):** El factor de mayor peso clínico.
 
-- Tras la limpieza de datos y la ingeniería de características (incorporando el estado vital y el historial de cirugía), se desarrollaron dos modelos de regresión. El modelo XGBoost resultó ser el más preciso, logrando reducir el error de predicción a 16.27 meses.
+- **Interacción Etapa-Quimio:** La variable que define la recomendación de tratamiento.
 
-## Comparativa de Modelos:
+- **Tamaño del Tumor:** Crítico para definir el beneficio marginal en etapas tempranas.
 
-![img_1.png](Comparacion_de_modelos.png)
+- **Era de Diagnóstico:** Refleja la evolución del sistema de salud.
 
-## Factores Determinantes (Feature Importance):
-El análisis de importancia de variables reveló que la supervivencia no depende de un solo factor, sino de una combinación crítica:
+## Motor de Recomendación y Análisis de Sensibilidad
+La gran innovación de esta entrega es la capacidad de simular escenarios clínicos para determinar el beneficio de la quimioterapia por etapa.
 
-- **Estado Vital (Event)** El predictor más fuerte del modelo.
-- **Clínica:** Las etapas Localized y Regional muestran un impacto positivo significativo frente a la etapa Distante.
-- **Nivel Socioeconómico:** El nivel de ingresos (especialmente en los rangos de $70k-$90k) tiene una importancia superior a la cirugía aislada, sugiriendo que el acceso económico influye directamente en el pronóstico a largo plazo.
+### **Beneficio de Quimioterapia por Escenario**
 
-## Análisis de Escenarios (Predicciones Reales):
-Utilizando el modelo final, se simularon tres perfiles de pacientes para validar la coherencia del sistema:
-
-![img.png](Comparacion.png)
+| Etapa | Beneficio Máximo | Punto de Inflexión | Recomendación |
+| :--- | :---: | :---: | :--- |
+| **Etapa 1** | ~30% | < 20mm | Alto impacto preventivo |
+| **Etapa 2** | **~23%** | **40mm** | **Zona crítica de decisión** |
+| **Etapa 3** | ~23% | Estable | Protocolo estándar |
+| **Etapa 4** | ~23% | Inmediato | Tratamiento esencial |
 
 ## Conclusión del Análisis Predictivo
 
-El desarrollo de este modelo permitió cuantificar la brecha en el pronóstico de supervivencia de cáncer de pulmón basándose en la intersección de factores clínicos y socioeconómicos.
+- **Eficacia:** El modelo es excepcionalmente preciso en casos de corto plazo, donde el 50% de las predicciones tienen un error inferior a 6 meses.
 
+- **Determinantes:** Se validó que el "Efecto Tratamiento" no es lineal; su éxito depende de la interacción directa con la etapa clínica detectada.
 
-- **Eficacia del Modelo:** El uso de XGBoost permitió capturar interacciones no lineales que modelos lineales tradicionales pasarían por alto, logrando una precisión del 30% en un fenómeno altamente estocástico como es la supervivencia oncológica.
-
-
-- **Determinantes de Salud:** Se observó que el "Efecto Cirugía" es interdependiente del nivel de ingresos. Mientras que la etapa clínica dicta la biología de la enfermedad, el nivel de ingresos actúa como un facilitador del acceso a tratamientos oportunos, lo que se refleja en una variación de hasta 52 meses entre los escenarios extremos analizados.
-
-
-- **Recomendación:** Para futuras iteraciones, se recomienda incluir variables de co-morbilidades y biomarcadores genéticos, los cuales podrían reducir el MAE residual de 16 meses y mejorar la personalización de las predicciones.
-
-## ⚠️ Consideraciones sobre el Modelo
-* **Variables omitidas:** Factores como la **Edad** y el **Género** fueron evaluados durante el EDA, pero no se incluyeron en el modelo de producción final para evitar el ruido estadístico, ya que la **Etapa del Cáncer** demostró ser el predictor con mayor relevancia clínica y estadística.
+- **Recomendación:** El sistema está listo para actuar como una herramienta de segunda opinión médica, ayudando a visualizar el beneficio estadístico de la quimioterapia antes de iniciar ciclos agresivos.

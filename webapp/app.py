@@ -1,141 +1,204 @@
 import streamlit as st
 import pandas as pd
-import joblib
 import os
-import matplotlib.pyplot as plt
+import sys
+import plotly.express as px
+import time
+from datetime import timedelta
 
-# 1. CONFIGURACIÓN Y DISEÑO (FONDO Y ESTILOS)
-st.set_page_config(page_title="Estimador de Supervivencia - Comparativa", layout="wide")
+# --- 1. CONFIGURACIÓN Y ESTILO ---
+st.set_page_config(page_title="OncoPredict AI Pro", layout="wide", page_icon="🔬")
 
 
-def apply_custom_design():
-    st.markdown(
-        """
+def apply_full_design():
+    img_url = "https://img.freepik.com/free-vector/network-mesh-wire-digital-technology-background_1017-27428.jpg"
+    st.markdown(f"""
         <style>
-        .stApp {
-            background: linear-gradient(rgba(10, 20, 40, 0.85), rgba(10, 20, 40, 0.85)), 
-                        url("https://images.unsplash.com/photo-1576086213369-97a306d36557?q=80&w=2080&auto=format&fit=crop");
-            background-size: cover; background-attachment: fixed;
-        }
-        .main .block-container {
-            background-color: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(15px); border-radius: 15px; padding: 3rem;
-            border: 1px solid rgba(0, 150, 255, 0.2);
-        }
-        [data-testid="stSidebar"] { background-color: rgba(5, 15, 30, 0.95) !important; }
-        h1, h2, h3, p, label { color: #e0e0e0 !important; }
-        .stMetricValue { color: #00d4ff !important; font-weight: bold; }
+        [data-testid="stAppViewContainer"] {{
+            background-image: url("{img_url}");
+            background-size: cover; background-position: center; background-attachment: fixed;
+        }}
+        [data-testid="stAppViewContainer"]::before {{
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(10, 15, 25, 0.9); z-index: 0;
+        }}
+        [data-testid="stSidebar"] {{
+            background-color: rgba(15, 20, 30, 0.8) !important;
+            backdrop-filter: blur(10px); border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }}
+        [data-testid="stMetric"], .stTabs, [data-testid="stForm"], .stExpander, .stTable, .stDataFrame {{
+            background: rgba(255, 255, 255, 0.05) !important;
+            backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 15px !important;
+        }}
+        h1, h2, h3 {{ color: #00d4ff !important; text-shadow: 0px 0px 10px rgba(0, 212, 255, 0.3); }}
+        p, label, span {{ color: #e0e0e0 !important; }}
         </style>
-        """,
-        unsafe_allow_html=True
-    )
+    """, unsafe_allow_html=True)
 
 
-apply_custom_design()
+apply_full_design()
+
+# --- 2. INICIALIZACIÓN DE SESIÓN ---
+if 'historico_pacientes' not in st.session_state:
+    st.session_state['historico_pacientes'] = pd.DataFrame()
+if 'ultimo_resultado' not in st.session_state:
+    st.session_state['ultimo_resultado'] = pd.DataFrame()
 
 
-# 2. CARGA DINÁMICA DE MODELOS
-@st.cache_resource
-def load_selected_model(model_file):
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    model_path = os.path.join(current_dir, '..', 'models', model_file)
-    return joblib.load(model_path)
+# --- 3. FUNCIONES DE APOYO ---
+def formatear_tiempo_humano(segundos):
+    return f"{segundos:.2f}s" if segundos < 60 else f"{int(segundos // 60)}m {int(segundos % 60)}s"
 
 
-# 3. INTERFAZ LATERAL (CONFIGURACIÓN + GLOSARIO)
-st.sidebar.header("⚙️ Configuración")
+# --- 4. SIDEBAR ---
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/2103/2103633.png", width=70)
+    st.title("Panel de Control")
+    metodo = st.radio("Método de Entrada:", ["Manual Individual", "Carga Masiva (CSV)"])
+    st.divider()
+    num_manual = st.number_input("Filas a procesar (Dataset):", min_value=1, value=10)
 
-# Selector de Modelo
-model_choice = st.sidebar.selectbox(
-    "Modelo Predictivo:",
-    ["Random Forest (MAE: 16.28)", "XGBoost (MAE: 17.90)"]
-)
+    if st.button("♻️ Reiniciar Investigación"):
+        st.session_state['historico_pacientes'] = pd.DataFrame()
+        st.session_state['ultimo_resultado'] = pd.DataFrame()
+        st.rerun()
 
-model_file = "survival_random_forest.pkl" if "Random Forest" in model_choice else "survival_xgboost_final.pkl"
-model = load_selected_model(model_file)
+# --- 5. CARGA DEL MOTOR ---
+ruta_raiz = os.path.dirname(os.path.abspath(__file__))
+if ruta_raiz not in sys.path: sys.path.append(ruta_raiz)
+from src.procesar_pacientes import procesar_lista_pacientes
 
-st.sidebar.markdown("---")
-st.sidebar.header("📋 Datos del Paciente")
-sur_val = st.sidebar.radio("¿Cirugía Realizada?", ["No", "Sí"])
-stg_val = st.sidebar.selectbox("Etapa del Cáncer", ["Localized", "Regional", "Distant"])
-inc_val = st.sidebar.selectbox("Nivel de Ingresos", ["menor_a_$40,000", "70,000_-_74,999", "120,000plus"])
+# --- 6. GESTIÓN DE ENTRADA ---
+st.title("🔬 OncoPredict AI: Soporte de Decisión")
+pacientes_data = []
 
-# GLOSARIO EN LA BARRA LATERAL
-st.sidebar.markdown("---")
-with st.sidebar.expander("📖 Glosario de Variables"):
-    st.write("**Has_Surgery:** Intervención quirúrgica del tumor primario.")
-    st.write("**Stage:** Extensión anatómica (Localized: un órgano, Regional: ganglios, Distant: metástasis).")
-    st.write("**Income:** Nivel socioeconómico del área de residencia.")
+if metodo == "Manual Individual":
+    with st.form("form_paciente"):
+        col1, col2 = st.columns(2)
+        with col1:
+            age = st.number_input("Edad", 18, 100, 60)
+            stage = st.select_slider("Etapa (Stage)", options=[1, 2, 3, 4], value=3)
+        with col2:
+            grade = st.selectbox("Grado Histológico", [1, 2, 3, 4])
+            tumor = st.number_input("Tamaño Tumor (mm)", 1, 150, 45)
 
-# Mapeo de datos
-data = {col: 0 for col in model.feature_names_in_}
-if "Has_Surgery" in data: data["Has_Surgery"] = 1 if sur_val == "Sí" else 0
-for col in data.keys():
-    if stg_val in col: data[col] = 1
-    if inc_val in col: data[col] = 1
-input_df = pd.DataFrame([data])
+        if st.form_submit_button("⚡ Analizar Paciente"):
+            pacientes_data = [
+                {'Age_Numeric': age, 'Stage_Rank': stage, 'Grade_Numeric': grade, 'Tumor_Size_Clean': tumor}]
+            st.session_state['ejecutar'] = True
 
-# 4. PANTALLA PRINCIPAL
-st.title("🎗️ Estimador de Supervivencia")
-st.subheader(f"Análisis mediante: {model_choice.split('(')[0]}")
+else:
+    file = st.file_uploader("Subir dataset oncológico (.csv)", type=["csv"])
+    if file:
+        df_subido = pd.read_csv(file)
+        st.info(f"📂 Archivo con {len(df_subido)} registros detectado.")
+        num_final = min(num_manual, len(df_subido))
 
-if st.button("Realizar Pronóstico"):
-    prediction = model.predict(input_df)[0]
+        if st.button(f"🚀 Procesar {num_final} registros"):
+            pacientes_data = df_subido.head(num_final).to_dict(orient='records')
+            st.session_state['ejecutar'] = True
 
-    col1, col2 = st.columns([1, 2])
+# --- 7. PROCESAMIENTO ---
+if pacientes_data and st.session_state.get('ejecutar', False):
+    t_inicio = time.time()
+    with st.spinner("🧠 Computando modelos de supervivencia y tratamiento..."):
+        df_res = procesar_lista_pacientes(pacientes_data)
+        st.session_state['ultimo_resultado'] = df_res
+        st.session_state['historico_pacientes'] = pd.concat([st.session_state['historico_pacientes'], df_res],
+                                                            ignore_index=True).drop_duplicates()
+        st.session_state['tiempo_ultimo'] = time.time() - t_inicio
+    st.session_state['ejecutar'] = False
 
-    with col1:
-        st.subheader("Resultado")
-        st.metric("Vida Estimada", f"{prediction:.1f} meses")
-        st.write("---")
-        st.write("**Resumen del Perfil:**")
-        st.write(f"- Etapa: **{stg_val}**")
-        st.write(f"- Cirugía: **{sur_val}**")
+# --- 8. VISUALIZACIÓN DE RESULTADOS ACTUALES ---
+if not st.session_state['ultimo_resultado'].empty:
+    df_act = st.session_state['ultimo_resultado']
+    st.divider()
+    st.subheader("📋 Resultados del Análisis Actual")
 
-    with col2:
-        st.subheader("Importancia de Factores")
+    # Métricas en formato DF (DF Format solicitado)
+    res_df = pd.DataFrame({
+        "Indicador": ["Tiempo de Proceso", "Supervivencia Media", "Beneficio por Tratamiento", "N° Casos"],
+        "Valor": [formatear_tiempo_humano(st.session_state['tiempo_ultimo']),
+                  f"{df_act['expectativa_total_meses'].mean():.1f} meses",
+                  f"+{df_act['ganancia_meses'].mean():.1f} meses",
+                  len(df_act)]
+    })
+    st.table(res_df)
 
-        # Extraer importancias del modelo seleccionado
-        importancias = model.feature_importances_
-        df_imp = pd.DataFrame({'Variable': model.feature_names_in_, 'Imp': importancias})
+    # SESIÓN DE LISTA DE VARIABLES (RECUPERADA)
+    with st.expander("🔍 Ver Lista Detallada de Pacientes y Variables", expanded=True):
+        # Límite de 1000 filas para el coloreado por rendimiento
+        if len(df_act) <= 1000:
+            st.dataframe(
+                df_act.style.background_gradient(subset=['expectativa_total_meses'], cmap='Blues')
+                .background_gradient(subset=['ganancia_meses'], cmap='RdYlGn'),
+                use_container_width=True
+            )
+        else:
+            st.warning("⚠️ Dataset muy grande. Se muestra sin colores para mayor fluidez.")
+            st.dataframe(df_act, use_container_width=True)
 
-        # Filtrar variables activas + cirugía (para que siempre se vea)
-        df_plot = df_imp[(input_df.iloc[0].values > 0) | (df_imp['Variable'] == "Has_Surgery")].copy()
+# --- 9. MÉTRICAS GLOBALES DE INVESTIGACIÓN ---
+st.divider()
+st.header("🌎 Panel de Investigación Acumulada")
 
-        # Limpieza de nombres para el gráfico
-        df_plot['Variable'] = df_plot['Variable'].str.replace("Stage_Consolidated_", "").str.replace("Income_Level_",
-                                                                                                     "")
-        df_plot = df_plot.sort_values('Imp', ascending=True)
+if not st.session_state['historico_pacientes'].empty:
+    hist = st.session_state['historico_pacientes']
 
-        # Gráfico
-        fig, ax = plt.subplots(figsize=(10, 5))
-        plt.style.use('dark_background')
-        fig.patch.set_alpha(0)
-        ax.set_facecolor("none")
+    # Tabla Global
+    metrics_inv = pd.DataFrame({
+        "Estadística de Investigación": ["Pacientes Totales", "Media Supervivencia", "Impacto Quimio (Máx)",
+                                         "Tasa Recomendación"],
+        "Valor Acumulado": [len(hist), f"{hist['expectativa_total_meses'].mean():.1f} m",
+                            f"{hist['ganancia_meses'].max():.1f} m",
+                            f"{(len(hist[hist['recomendacion'] == 'SUGERIR_QUIMIO']) / len(hist)) * 100:.1f}%"]
+    })
+    st.table(metrics_inv)
 
-        max_val = max(df_plot['Imp'].max(), 0.1)
-        ax.barh(df_plot['Variable'], df_plot['Imp'], color='#00d4ff', edgecolor='white')
-        ax.set_xlim(0, max_val + 0.05)
+    # --- 8. MÉTRICAS DE INVESTIGACIÓN ACUMULADA ---
+    if not st.session_state['historico_pacientes'].empty:
+        st.divider()
+        st.header("📊 Panel de Investigación Acumulada")
+        hist = st.session_state['historico_pacientes']
 
-        st.pyplot(fig)
+        c1, c2 = st.columns([1, 2])
+        with c1:
+            st.table(pd.DataFrame({
+                "Investigación": ["Pacientes Totales", "Tasa Recomendación"],
+                "Valor": [len(hist), f"{(len(hist[hist['ganancia_meses'] > 10]) / len(hist)) * 100:.1f}%"]
+            }))
+            fig_pie = px.pie(hist, names='recomendacion', hole=0.4, title="Mix de Tratamiento",
+                             color_discrete_sequence=['#00fbff', '#ff4b4b'])
+            st.plotly_chart(fig_pie, use_container_width=True)
+            # DESCRIPCIÓN DINÁMICA
+            tasa_quimio = (len(hist[hist['recomendacion'] == 'SUGERIR_QUIMIO']) / len(hist)) * 100
+            st.markdown(f"""
+                    <div class="interpretacion-caja">
+                    <strong>💡 Interpretación del Mix:</strong><br>
+                    Este gráfico muestra la proporción de pacientes que se beneficiarían significativamente de quimioterapia. 
+                    En la muestra actual, el <b>{tasa_quimio:.1f}%</b> de los pacientes presentan un perfil de alto beneficio terapéutico 
+                    basado en el modelo de riesgos de Cox.
+                    </div>
+                    """, unsafe_allow_html=True)
 
-        st.markdown("---")  # Una línea divisoria para separar
-        with st.expander("🔬 Nota técnica: ¿Por qué la Cirugía marca 0.0000?"):
-            st.info("""
-                    **Explicación para la defensa del proyecto:**
+        with c2:
+            # Mejora visual del Box Plot (Jittering para evitar amontonamiento a la izquierda)
+            fig_box = px.box(hist, y="expectativa_total_meses", points="all", notched=True,
+                             title="Dispersión de Supervivencia Global")
+            fig_box.update_traces(jitter=0.7, pointpos=-1.5, marker=dict(color='#00d4ff', opacity=0.5))
+            st.plotly_chart(fig_box, use_container_width=True)
+            # DESCRIPCIÓN DINÁMICA
+            mediana = hist['expectativa_total_meses'].median()
+            st.markdown(f"""
+                    <div class="interpretacion-caja">
+                    <strong>🔍 Análisis de Dispersión:</strong><br>
+                    La caja central contiene el 50% de tus pacientes. La línea media indica una supervivencia mediana de <b>{mediana:.1f} meses</b>. 
+                    Los puntos desplazados a la izquierda permiten observar casos atípicos (outliers) y la densidad de la muestra sin ocultar 
+                    la tendencia estadística principal.
+                    </div>
+                    """, unsafe_allow_html=True)
 
-                    1. **Dominancia de la Etapa:** La variable 'Stage' es un predictor tan potente en este modelo que absorbe estadísticamente la importancia de la cirugía.
-                    2. **Desbalance de Datos:** Al revisar `value_counts()` en el dataset, se observa que la gran mayoría de los pacientes no tienen cirugía registrada, lo que reduce su peso en el entrenamiento.
-                    3. **Filtro de Ruido:** El algoritmo XGBoost prioriza variables con mayor varianza para evitar el sobreajuste (overfitting).
-                    """)
-
-        # EXPLICACIÓN TÉCNICA
-        with st.expander("🔬 Nota sobre la importancia y el modelo"):
-            if "Random Forest" in model_choice:
-                st.write("El **Random Forest** es el modelo más preciso del proyecto (MAE: 16.28).")
-            else:
-                st.write("El **XGBoost** (MAE: 17.90) muestra una mayor sensibilidad a la Etapa Clínica.")
-
-            if df_plot[df_plot['Variable'] == 'Has_Surgery']['Imp'].values[0] <= 0.001:
-                st.info(
-                    "La cirugía muestra importancia marginal debido al desbalance en el dataset original (`value_counts`), donde la Etapa Clínica domina la varianza estadística.")
+    st.download_button("📥 Descargar Base de Investigación (CSV)", hist.to_csv(index=False), "investigacion_onco.csv")
+else:
+    st.info("La base de datos de investigación está vacía. Inicia un análisis para ver los acumulados.")
