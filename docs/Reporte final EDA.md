@@ -1,57 +1,164 @@
-# Reporte de Resultados: Modelo Predictivo de Supervivencia
+# Análisis Exploratorio y Modelado Predictivo de Supervivencia en Cáncer de Pulmón
 
-## Conclusión General del EDA: Biología y Entorno
+---
 
-El análisis exploratorio final confirma que la supervivencia es un fenómeno multifactorial. Tras la ingeniería de variables, descubrimos que la Era Médica (diagnósticos post-2010) actúa como un catalizador positivo, probablemente debido a la adopción de terapias dirigidas e inmunoterapia.
+1. **Contexto y Motivación**
 
-### **Métricas Clave del Dataset Procesado**
+El cáncer de pulmón es una de las principales causas de mortalidad a nivel mundial. Comprender los factores asociados a la supervivencia de los pacientes y cómo estos interactúan con distintos tratamientos es clave para apoyar el análisis clínico y la investigación en salud.
 
-| Dimensión | Variable(s) Clave | Hallazgo Crítico / Impacto |
-| :--- | :--- | :--- |
-| **Temporal** | `Year_of_diagnosis` | **Evolución Médica:** El diagnóstico reciente actúa como un factor de protección, reflejando mejoras en protocolos clínicos. |
-| **Socioeconómica** | `Income_Numeric` | **Determinante de Salud:** El nivel de ingresos es un modulador crítico que facilita el acceso a tratamientos de alta complejidad. |
-| **Clínica Base** | `Stage_Rank`, `Tumor_Size_Clean` | **Estratificación de Riesgo:** Son los predictores primarios que definen la agresividad biológica y el pronóstico base. |
-| **Carga Tumoral** | `Total_Tumors_Count`, `Is_Multicentric` | **Complejidad Sistémica:** Permite al modelo ajustar la supervivencia basándose en la dispersión del cáncer en el organismo. |
-| **Ingeniería Avanzada** | `Tumor_Age_Ratio` | **Cinética del Cáncer:** Proporciona una métrica de velocidad de crecimiento que refina la precisión en etapas intermedias. |
+Este proyecto aborda el problema desde una perspectiva de Data Science aplicada, combinando análisis exploratorio, modelos predictivos tradicionales y técnicas de Survival Analysis, con el objetivo de extraer patrones relevantes y explorar el riesgo de mortalidad a lo largo del tiempo.
 
-## Resumen Ejecutivo del Modelado
+---
 
-Se evolucionó de un modelo base a un XGBoost con Interacciones que permite entender cómo la quimioterapia afecta de manera distinta a cada etapa. Se logró un $R^2$ de 0.423, superando el 30% del modelo inicial.
+⚠️ **Nota importante:** Este proyecto es de carácter académico y exploratorio. Los resultados reflejan asociaciones estadísticas aprendidas por los modelos y no implican relaciones causales ni deben interpretarse como recomendaciones clínicas.
 
-###  **Comparativa Final de Modelos**
+---
 
-| Modelo | $R^2$ Score | MAE (Meses) | Estado |
-| :--- | :---: | :---: | :--- |
-| Random Forest (Base) | 0.320 | 20.00 | Superado |
-| **XGBoost (Optimizado)** | **0.423** | **14.22** | **Ganador** |
+2. **Objetivos del Proyecto**
+- Objetivo general
 
-## Factores Determinantes (Feature Importance)
-El modelo final prioriza las variables que realmente "mueven la aguja" en el pronóstico:
+  - Analizar la supervivencia de pacientes con cáncer de pulmón a partir de variables clínicas, demográficas y temporales, utilizando enfoques de Data Science y Machine Learning.
 
-- **Etapa del Cáncer (Stage_Rank):** El factor de mayor peso clínico.
+  - Objetivos específicos
 
-- **Interacción Etapa-Quimio:** La variable que define la recomendación de tratamiento.
+  - Realizar un Análisis Exploratorio de Datos (EDA) con énfasis clínico y estadístico.
 
-- **Tamaño del Tumor:** Crítico para definir el beneficio marginal en etapas tempranas.
+  - Identificar variables e interacciones asociadas a diferencias significativas en supervivencia.
 
-- **Era de Diagnóstico:** Refleja la evolución del sistema de salud.
+  - Comparar modelos de Machine Learning tradicionales para la predicción de tiempo de supervivencia (enfoque comparativo).
 
-## Motor de Recomendación y Análisis de Sensibilidad
-La gran innovación de esta entrega es la capacidad de simular escenarios clínicos para determinar el beneficio de la quimioterapia por etapa.
+  - Aplicar técnicas de Survival Analysis para estimar riesgo y curvas de supervivencia.
 
-### **Beneficio de Quimioterapia por Escenario**
+  - Explorar escenarios y análisis de sensibilidad del tratamiento desde una perspectiva predictiva.
+  
+---
 
-| Etapa | Beneficio Máximo | Punto de Inflexión | Recomendación |
-| :--- | :---: | :---: | :--- |
-| **Etapa 1** | ~30% | < 20mm | Alto impacto preventivo |
-| **Etapa 2** | **~23%** | **40mm** | **Zona crítica de decisión** |
-| **Etapa 3** | ~23% | Estable | Protocolo estándar |
-| **Etapa 4** | ~23% | Inmediato | Tratamiento esencial |
+3. **Dataset**
 
-## Conclusión del Análisis Predictivo
+El dataset contiene información clínica anonimizada de pacientes diagnosticados con cáncer de pulmón.
 
-- **Eficacia:** El modelo es excepcionalmente preciso en casos de corto plazo, donde el 50% de las predicciones tienen un error inferior a 6 meses.
+- Incluye variables como:
 
-- **Determinantes:** Se validó que el "Efecto Tratamiento" no es lineal; su éxito depende de la interacción directa con la etapa clínica detectada.
+    - Edad y características demográficas.
 
-- **Recomendación:** El sistema está listo para actuar como una herramienta de segunda opinión médica, ayudando a visualizar el beneficio estadístico de la quimioterapia antes de iniciar ciclos agresivos.
+    - Estado funcional y variables socioeconómicas.
+
+    - Tipo, tamaño y estadio del tumor.
+
+    - Información de tratamiento.
+
+    - Tiempo de seguimiento.
+
+    - Indicador de evento (fallecimiento) y censura.
+
+La presencia de datos censurados motiva el uso de técnicas específicas de survival analysis.
+
+---
+
+4. Estructura del Proyecto
+```text
+├── 01_eda_elius.ipynb              # Análisis exploratorio y síntesis de hallazgos
+├── 02-00_ML_prediccion_elius.ipynb  # Modelos de ML para predicción de supervivencia
+├── 03-00_ML_survival_elius.ipynb    # Survival analysis y análisis de escenarios
+├── requirements.txt                # Librerías necesarias
+└── README.md                       # Documentación del proyecto
+```
+   ---
+5. Metodología
+
+-  **5.1 Análisis Exploratorio de Datos (EDA)**
+
+    - Análisis univariado y bivariado.
+
+    - Visualizaciones clínicas.
+
+    - Curvas de Kaplan–Meier.
+
+    - Tests estadísticos (log-rank, chi-cuadrado).
+
+    - Síntesis de variables relevantes y posibles interacciones.
+
+
+-  **5.2 Machine Learning (Enfoque comparativo)**
+
+
+- Modelos evaluados:
+
+    - Random Forest Regressor.
+
+    - XGBoost Regressor.
+
+    
+- Métricas:
+
+  - MAE.
+
+  - RMSE.
+
+  - R².
+
+Este enfoque se utiliza con fines comparativos y exploratorios, ya que los modelos de regresión no manejan explícitamente la censura de datos.
+
+- **5.3 Survival Analysis y Riesgo**
+
+  - Modelos de supervivencia para:
+
+  - Estimación de riesgo individual.
+
+  - Curvas de supervivencia por subgrupos.
+
+  - Análisis de escenarios y sensibilidad del tratamiento.
+---
+6. **Resultados Principales**
+
+   - La supervivencia se ve influenciada por factores clínicos, temporales y socioeconómicos.
+
+   - Variables como la etapa clínica y el tamaño tumoral emergen como predictores dominantes.
+
+   - Los modelos de ML tradicionales muestran un desempeño razonable, pero presentan limitaciones ante datos censurados.
+
+   - Los modelos de supervivencia permiten una representación más realista del riesgo a lo largo del tiempo.
+---
+
+7. **Limitaciones**
+
+   - Dataset de tamaño limitado.
+
+   - Posibles sesgos en variables clínicas y socioeconómicas.
+
+   - Ausencia de validación externa.
+
+   - No se realiza inferencia causal ni ajuste por confounding avanzado.
+---
+
+8. **Próximos Pasos**
+
+   - Validar supuestos de riesgos proporcionales en modelos de Cox.
+
+   - Incorporar métricas específicas de survival analysis (C-index).
+
+   - Explorar modelos avanzados (Random Survival Forests, Deep Survival Models).
+
+    - Mejorar interpretabilidad clínica y análisis de subgrupos.
+---
+
+9. **Tecnologías Utilizadas**
+
+   
+   - pandas, numpy
+
+   - matplotlib, seaborn
+
+   - scikit-learn
+
+   - lifelines
+
+   - xgboost
+---
+10. **Autores**
+
+- [Betania Medina](https://github.com/Betaniammc)
+- [Carlos Restrepo ](https://github.com/carlos-villa-restrepo)
+- [Elius Trujillo](https://www.linkedin.com/in/elius-trujillo/)
+---
+Proyecto de Data Science enfocado en Machine Learning aplicado y Survival Analysis.
