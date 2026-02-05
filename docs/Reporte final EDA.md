@@ -1,52 +1,164 @@
-# Reporte de Resultados: Modelo Predictivo de Supervivencia
+# Análisis Exploratorio y Modelado Predictivo de Supervivencia en Cáncer de Pulmón
 
-## Conclusión General del EDA: **El Peso de los Factores No Clínicos**
+---
 
-El análisis exploratorio revela que la supervivencia de los pacientes en este dataset no es solo un fenómeno biológico, sino también estructural. Si bien la agresividad del cáncer (etapa) dicta el pronóstico base, el entorno socioeconómico actúa como un modulador crítico del tiempo de vida restante.
+1. **Contexto y Motivación**
 
-## Las tres claves del estudio:
+El cáncer de pulmón es una de las principales causas de mortalidad a nivel mundial. Comprender los factores asociados a la supervivencia de los pacientes y cómo estos interactúan con distintos tratamientos es clave para apoyar el análisis clínico y la investigación en salud.
 
-1. **La "Ventana de Oportunidad" Económica:** El nivel de ingresos es un factor determinante de supervivencia principalmente en etapas donde el tratamiento médico tiene mayor potencial curativo. Esto sugiere que las barreras económicas afectan el acceso a tratamientos de alta complejidad o seguimiento intensivo.
+Este proyecto aborda el problema desde una perspectiva de Data Science aplicada, combinando análisis exploratorio, modelos predictivos tradicionales y técnicas de Survival Analysis, con el objetivo de extraer patrones relevantes y explorar el riesgo de mortalidad a lo largo del tiempo.
+
+---
+
+⚠️ **Nota importante:** Este proyecto es de carácter académico y exploratorio. Los resultados reflejan asociaciones estadísticas aprendidas por los modelos y no implican relaciones causales ni deben interpretarse como recomendaciones clínicas.
+
+---
+
+2. **Objetivos del Proyecto**
+- Objetivo general
+
+  - Analizar la supervivencia de pacientes con cáncer de pulmón a partir de variables clínicas, demográficas y temporales, utilizando enfoques de Data Science y Machine Learning.
+
+  - Objetivos específicos
+
+  - Realizar un Análisis Exploratorio de Datos (EDA) con énfasis clínico y estadístico.
+
+  - Identificar variables e interacciones asociadas a diferencias significativas en supervivencia.
+
+  - Comparar modelos de Machine Learning tradicionales para la predicción de tiempo de supervivencia (enfoque comparativo).
+
+  - Aplicar técnicas de Survival Analysis para estimar riesgo y curvas de supervivencia.
+
+  - Explorar escenarios y análisis de sensibilidad del tratamiento desde una perspectiva predictiva.
+  
+---
+
+3. **Dataset**
+
+El dataset contiene información clínica anonimizada de pacientes diagnosticados con cáncer de pulmón.
+
+- Incluye variables como:
+
+    - Edad y características demográficas.
+
+    - Estado funcional y variables socioeconómicas.
+
+    - Tipo, tamaño y estadio del tumor.
+
+    - Información de tratamiento.
+
+    - Tiempo de seguimiento.
+
+    - Indicador de evento (fallecimiento) y censura.
+
+La presencia de datos censurados motiva el uso de técnicas específicas de survival analysis.
+
+---
+
+4. Estructura del Proyecto
+```text
+├── 01_eda_elius.ipynb              # Análisis exploratorio y síntesis de hallazgos
+├── 02-00_ML_prediccion_elius.ipynb  # Modelos de ML para predicción de supervivencia
+├── 03-00_ML_survival_elius.ipynb    # Survival analysis y análisis de escenarios
+├── requirements.txt                # Librerías necesarias
+└── README.md                       # Documentación del proyecto
+```
+   ---
+5. Metodología
+
+-  **5.1 Análisis Exploratorio de Datos (EDA)**
+
+    - Análisis univariado y bivariado.
+
+    - Visualizaciones clínicas.
+
+    - Curvas de Kaplan–Meier.
+
+    - Tests estadísticos (log-rank, chi-cuadrado).
+
+    - Síntesis de variables relevantes y posibles interacciones.
 
 
-2. **Inequidad Persistente** El hecho de que el ingreso sea significativo incluso dentro de la misma etapa clínica (p < 0.05 en el modelo de Cox) confirma que, ante diagnósticos idénticos, los pacientes con menos recursos enfrentan un riesgo de mortalidad mayor.
+-  **5.2 Machine Learning (Enfoque comparativo)**
 
 
-3. **Prioridad de Intervención:** Los datos justifican que los modelos predictivos futuros no pueden ignorar las variables sociales. Para mejorar la supervivencia global, no solo se requieren mejores fármacos, sino políticas que mitiguen la brecha de acceso según el nivel de ingresos.
+- Modelos evaluados:
 
+    - Random Forest Regressor.
 
-## Resumen Ejecutivo:
+    - XGBoost Regressor.
 
-- Tras la limpieza de datos y la ingeniería de características (incorporando el estado vital y el historial de cirugía), se desarrollaron dos modelos de regresión. El modelo XGBoost resultó ser el más preciso, logrando reducir el error de predicción a 16.27 meses.
+    
+- Métricas:
 
-## Comparativa de Modelos:
+  - MAE.
 
-![img_1.png](Comparacion_de_modelos.png)
+  - RMSE.
 
-## Factores Determinantes (Feature Importance):
-El análisis de importancia de variables reveló que la supervivencia no depende de un solo factor, sino de una combinación crítica:
+  - R².
 
-- **Estado Vital (Event)** El predictor más fuerte del modelo.
-- **Clínica:** Las etapas Localized y Regional muestran un impacto positivo significativo frente a la etapa Distante.
-- **Nivel Socioeconómico:** El nivel de ingresos (especialmente en los rangos de $70k-$90k) tiene una importancia superior a la cirugía aislada, sugiriendo que el acceso económico influye directamente en el pronóstico a largo plazo.
+Este enfoque se utiliza con fines comparativos y exploratorios, ya que los modelos de regresión no manejan explícitamente la censura de datos.
 
-## Análisis de Escenarios (Predicciones Reales):
-Utilizando el modelo final, se simularon tres perfiles de pacientes para validar la coherencia del sistema:
+- **5.3 Survival Analysis y Riesgo**
 
-![img.png](Comparacion.png)
+  - Modelos de supervivencia para:
 
-## Conclusión del Análisis Predictivo
+  - Estimación de riesgo individual.
 
-El desarrollo de este modelo permitió cuantificar la brecha en el pronóstico de supervivencia de cáncer de pulmón basándose en la intersección de factores clínicos y socioeconómicos.
+  - Curvas de supervivencia por subgrupos.
 
+  - Análisis de escenarios y sensibilidad del tratamiento.
+---
+6. **Resultados Principales**
 
-- **Eficacia del Modelo:** El uso de XGBoost permitió capturar interacciones no lineales que modelos lineales tradicionales pasarían por alto, logrando una precisión del 30% en un fenómeno altamente estocástico como es la supervivencia oncológica.
+   - La supervivencia se ve influenciada por factores clínicos, temporales y socioeconómicos.
 
+   - Variables como la etapa clínica y el tamaño tumoral emergen como predictores dominantes.
 
-- **Determinantes de Salud:** Se observó que el "Efecto Cirugía" es interdependiente del nivel de ingresos. Mientras que la etapa clínica dicta la biología de la enfermedad, el nivel de ingresos actúa como un facilitador del acceso a tratamientos oportunos, lo que se refleja en una variación de hasta 52 meses entre los escenarios extremos analizados.
+   - Los modelos de ML tradicionales muestran un desempeño razonable, pero presentan limitaciones ante datos censurados.
 
+   - Los modelos de supervivencia permiten una representación más realista del riesgo a lo largo del tiempo.
+---
 
-- **Recomendación:** Para futuras iteraciones, se recomienda incluir variables de co-morbilidades y biomarcadores genéticos, los cuales podrían reducir el MAE residual de 16 meses y mejorar la personalización de las predicciones.
+7. **Limitaciones**
 
-## ⚠️ Consideraciones sobre el Modelo
-* **Variables omitidas:** Factores como la **Edad** y el **Género** fueron evaluados durante el EDA, pero no se incluyeron en el modelo de producción final para evitar el ruido estadístico, ya que la **Etapa del Cáncer** demostró ser el predictor con mayor relevancia clínica y estadística.
+   - Dataset de tamaño limitado.
+
+   - Posibles sesgos en variables clínicas y socioeconómicas.
+
+   - Ausencia de validación externa.
+
+   - No se realiza inferencia causal ni ajuste por confounding avanzado.
+---
+
+8. **Próximos Pasos**
+
+   - Validar supuestos de riesgos proporcionales en modelos de Cox.
+
+   - Incorporar métricas específicas de survival analysis (C-index).
+
+   - Explorar modelos avanzados (Random Survival Forests, Deep Survival Models).
+
+    - Mejorar interpretabilidad clínica y análisis de subgrupos.
+---
+
+9. **Tecnologías Utilizadas**
+
+   
+   - pandas, numpy
+
+   - matplotlib, seaborn
+
+   - scikit-learn
+
+   - lifelines
+
+   - xgboost
+---
+10. **Autores**
+
+- [Betania Medina](https://github.com/Betaniammc)
+- [Carlos Restrepo ](https://github.com/carlos-villa-restrepo)
+- [Elius Trujillo](https://www.linkedin.com/in/elius-trujillo/)
+---
+Proyecto de Data Science enfocado en Machine Learning aplicado y Survival Analysis.
