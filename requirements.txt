@@ -1,11 +1,13 @@
 # Core Python dependencies
 streamlit
 pandas
-joblib
+numpy
 scikit-learn
 xgboost
-plotly
-openpyxl
+joblib
+matplotlib
+seaborn
+
 
 # Data acquisition
 # requests>=2.28.0
