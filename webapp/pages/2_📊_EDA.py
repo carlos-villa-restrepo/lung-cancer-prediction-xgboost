@@ -3,67 +3,57 @@ import pandas as pd
 import os
 from utils import set_design
 
-# 1. CONFIGURACIÓN DE PÁGINA
-st.set_page_config(page_title="Análisis de Datos - EDA", layout="wide")
+# 1. CONFIGURACIÓN
+st.set_page_config(page_title="EDA", layout="wide")
 set_design("eda")
 
 st.title("Exploración de Datos (EDA)")
 
-# 2. INICIALIZACIÓN DE VARIABLES (Evita NameError)
+# 2. LÓGICA DE RUTAS (Basada en tu estructura real)
 df = None
 
-# 3. COMPONENTE DE CARGA EN SIDEBAR
+# Sidebar para subir archivo manualmente
 st.sidebar.header("Configuración de Datos")
 uploaded_file = st.sidebar.file_uploader("Sube tu archivo CSV", type=["csv"])
 
-# 4. LÓGICA DE CARGA (Primero el archivo subido, luego el default)
 if uploaded_file is not None:
-    try:
-        df = pd.read_csv(uploaded_file)
-        st.success("✅ Archivo subido con éxito.")
-    except Exception as e:
-        st.error(f"Error al leer el archivo subido: {e}")
+    df = pd.read_csv(uploaded_file)
 else:
-    # Rutas basadas en tu estructura de archivos detectada
+    # Definimos las rutas exactas según tu imagen de VS Code
     rutas_a_probar = [
-        "data/EDA_FINAL.csv",           # Carpeta data en la raíz
-        "webapp/data/EDA_FINAL.csv",    # Carpeta data dentro de webapp
-        "../data/EDA_FINAL.csv"         # Relativa desde pages
+        "data/processed/EDA_FINAL.csv",    # Ruta 1: Directorio raíz (processed)
+        "webapp/data/EDA_FINAL.csv",       # Ruta 2: Dentro de webapp
+        "data/EDA_FINAL.csv"               # Ruta 3: Genérica en data
     ]
     
     for ruta in rutas_a_probar:
         if os.path.exists(ruta):
             try:
                 df = pd.read_csv(ruta)
-                st.info(f"📊 Cargando dataset predeterminado.")
+                st.info(f"✅ Dataset cargado desde: {ruta}")
                 break
             except Exception as e:
                 continue
 
     if df is None:
-        st.warning("⚠️ No se encontró el dataset 'EDA_FINAL.csv'. Por favor, cárgalo manualmente.")
+        st.error("⚠️ No se encontró el archivo EDA_FINAL.csv en las rutas conocidas.")
 
-# 5. VISUALIZACIÓN DE MÉTRICAS EN DATAFRAME [2026-02-12]
-# Solo ejecutamos si el DataFrame se cargó correctamente
+# 3. MÉTRICAS EN FORMATO DATAFRAME [2026-02-12]
 if df is not None:
-    st.subheader("📋 Vista General del Dataset")
-    # Mostramos los datos en formato interactivo
+    st.subheader("📋 Vista General")
     st.dataframe(df.head(10), use_container_width=True)
 
-    st.subheader("📈 Análisis Estadístico (Métricas)")
-    # Transponemos para que las métricas (mean, std, etc.) sean filas, cumpliendo tu preferencia de DF
+    st.subheader("📊 Análisis Estadístico")
+    # Presentamos el describe() transpuesto para cumplir con tu preferencia de DF
     st.dataframe(df.describe().T, use_container_width=True)
 
-    st.subheader("🔍 Distribución por Variable")
-    col_target = st.selectbox("Selecciona columna para analizar:", df.columns)
-    
-    # Tabla de frecuencias en formato DF
+    # Selector de variables y tabla de frecuencias
+    col_target = st.selectbox("Selecciona columna:", df.columns)
     conteo = df[col_target].value_counts().reset_index()
     conteo.columns = [col_target, 'Cantidad']
     
-    col_graf, col_tabla = st.columns([2, 1])
-    with col_graf:
+    c1, c2 = st.columns([2, 1])
+    with c1:
         st.bar_chart(conteo.set_index(col_target))
-    with col_tabla:
-        # Tabla de conteo específica en formato DF
+    with c2:
         st.dataframe(conteo, use_container_width=True, hide_index=True)
