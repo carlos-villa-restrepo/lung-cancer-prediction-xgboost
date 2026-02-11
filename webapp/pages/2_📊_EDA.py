@@ -21,9 +21,9 @@ if uploaded_file is not None:
 else:
     # Definimos las rutas exactas según tu imagen de VS Code
     rutas_a_probar = [
-        "data/processed/EDA_FINAL.csv",    # Ruta 1: Directorio raíz (processed)
-        "webapp/data/EDA_FINAL.csv",       # Ruta 2: Dentro de webapp
-        "data/EDA_FINAL.csv"               # Ruta 3: Genérica en data
+        "../data/processed/EDA_FINAL.csv",    # Ruta 1: Directorio raíz (processed)
+        "../webapp/data/EDA_FINAL.csv",       # Ruta 2: Dentro de webapp
+        "../data/EDA_FINAL.csv"               # Ruta 3: Genérica en data
     ]
     
     for ruta in rutas_a_probar:
