@@ -5,42 +5,56 @@ import os
 import plotly.graph_objects as go
 from utils import set_design
 
-
-
-# 1. Configuración y Estética
+# 1. CONFIGURACIÓN Y ESTÉTICA
 st.set_page_config(page_title="Predicción Individual", layout="wide")
 set_design("prediction")
 
+# --- FUNCIONES DE CARGA ROBUSTAS ---
+@st.cache_resource
+def cargar_todos_los_modelos():
+    """Carga los modelos .joblib usando rutas absolutas para evitar errores en la nube."""
+    # Obtenemos la raíz del proyecto (un nivel arriba de /pages)
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    cortes = [12, 24, 36, 48, 60]
+    modelos = {}
+    
+    for m in cortes:
+        # Buscamos archivos .joblib que es lo que tienes en tu carpeta /model
+        path = os.path.join(BASE_DIR, "model", f"pipeline_{m}m.joblib")
+        
+        if os.path.exists(path):
+            try:
+                modelos[m] = joblib.load(path)
+            except Exception as e:
+                st.error(f"Error al cargar el modelo de {m} meses: {e}")
+        else:
+            # Intento de respaldo con .pkl por si acaso
+            path_pkl = path.replace(".joblib", ".pkl")
+            if os.path.exists(path_pkl):
+                modelos[m] = joblib.load(path_pkl)
+                
+    return modelos
 
-# --- FUNCIONES DE CARGA ---
 @st.cache_data
 def cargar_referencia():
-    try:
-        return pd.read_csv("data/referencia_pacientes.csv")
-    except:
-        return pd.DataFrame()
+    """Carga el CSV de referencia de pacientes."""
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    path = os.path.join(BASE_DIR, "data", "referencia_pacientes.csv")
+    if os.path.exists(path):
+        return pd.read_csv(path)
+    return pd.DataFrame()
 
-
-@st.cache_resource
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ruta_modelo = os.path.join(BASE_DIR, "model", "nombre_de_tu_modelo.joblib")
-
-if os.path.exists(ruta_modelo):
-    model = joblib.load(ruta_modelo)
-    st.success("Modelo cargado correctamente.")
-else:
-    st.error(f"No se encontró el modelo en: {ruta_modelo}")
-
-
+# 2. CARGA DE DATOS (Variables Globales para evitar NameError)
 df_ref = cargar_referencia()
 dict_modelos = cargar_todos_los_modelos()
 
-# 2. SIDEBAR: Buscador por ID
+# --- SIDEBAR: BUSCADOR ---
 st.sidebar.header("🔍 Cargar Datos Reales")
 id_input = st.sidebar.text_input("Patient ID:", placeholder="Ej: 450")
 
 paciente_data = None
 if id_input and not df_ref.empty:
+    # Aseguramos comparación de strings para el ID
     res = df_ref[df_ref['Patient ID'].astype(str) == id_input]
     if not res.empty:
         paciente_data = res.iloc[0]
@@ -76,16 +90,15 @@ with st.expander("📝 Editar Variables del Paciente", expanded=True):
         tumor_val = int(paciente_data['tumor_category']) if paciente_data is not None else 30
         tumor = st.slider("Tamaño del Tumor (mm)", 0, 100, tumor_val)
 
-        ntum_val = int(
-            paciente_data['Total number of in situ/malignant tumors for patient']) if paciente_data is not None else 1
+        ntum_val = int(paciente_data['Total number of in situ/malignant tumors for patient']) if paciente_data is not None else 1
         n_tumores = st.number_input("Cantidad de tumores", 1, 15, value=ntum_val)
 
-# 4. PROCESAMIENTO DE PREDICCIÓN
+# 4. PROCESAMIENTO Y RESULTADOS
 if st.button("📊 Generar Análisis de Supervivencia", use_container_width=True):
     if not dict_modelos:
-        st.error("No se encontraron modelos en la carpeta /model")
+        st.error("Error: No se detectaron modelos en la carpeta '/model'. Verifica las extensiones .joblib")
     else:
-        # Preparamos los datos (incluyendo las fijas del ID o defaults)
+        # Preparación de datos para los modelos
         input_row = {
             'Sex': sex,
             'age_group': age,
@@ -95,24 +108,23 @@ if st.button("📊 Generar Análisis de Supervivencia", use_container_width=True
             'Total number of in situ/malignant tumors for patient': n_tumores,
             'income_level': int(paciente_data['income_level']) if paciente_data is not None else 3,
             'grade_clinical': str(paciente_data['grade_clinical']) if paciente_data is not None else "9",
-            'histology_type_named': paciente_data[
-                'histology_type_named'] if paciente_data is not None else "Adenocarcinoma"
+            'histology_type_named': paciente_data['histology_type_named'] if paciente_data is not None else "Adenocarcinoma"
         }
         input_df = pd.DataFrame([input_row])
 
-        # Calculamos probabilidades para cada mes
+        # Predicción multitemporal
         tiempos = []
         probabilidades = []
 
-        for m, model in dict_modelos.items():
-            prob = model.predict_proba(input_df)[0][1]
+        for m in sorted(dict_modelos.keys()):
+            prob = dict_modelos[m].predict_proba(input_df)[0][1]
             tiempos.append(m)
-            probabilidades.append(float(prob) * 100)  # Fix float32
+            probabilidades.append(float(prob) * 100)
 
-        # Crear DataFrame de resultados (Tu preferencia [2026-01-28])
+        # Métrica solicitada: DataFrame de resultados [2026-01-28]
         df_resultados = pd.DataFrame({
-            "Meses": [f"{t} Meses" for t in tiempos],
-            "Probabilidad": probabilidades
+            "Horizonte Temporal": [f"A {t} meses" for t in tiempos],
+            "Probabilidad Supervivencia": probabilidades
         })
 
         # --- VISUALIZACIÓN ---
@@ -120,37 +132,33 @@ if st.button("📊 Generar Análisis de Supervivencia", use_container_width=True
         c1, c2 = st.columns([2, 1])
 
         with c1:
-            st.subheader("📈 Curva de Supervivencia Estimada")
+            st.subheader("📈 Curva de Supervivencia")
             fig = go.Figure()
             fig.add_trace(go.Scatter(
                 x=tiempos, y=probabilidades,
                 mode='lines+markers',
-                line=dict(color='#2D5A27', width=3),
-                marker=dict(size=10),
-                fill='tozeroy'  # Área bajo la curva
+                line=dict(color='#2E7D32', width=4),
+                marker=dict(size=12, symbol='diamond'),
+                fill='tozeroy',
+                name='Probabilidad'
             ))
             fig.update_layout(
-                xaxis_title="Meses tras el diagnóstico",
-                yaxis_title="Probabilidad de estar Vivo (%)",
-                yaxis=dict(range=[0, 105]),
-                template="plotly_white"
+                xaxis_title="Meses", yaxis_title="Probabilidad (%)",
+                yaxis=dict(range=[0, 105]), template="plotly_white"
             )
             st.plotly_chart(fig, use_container_width=True)
 
         with c2:
-            st.subheader("📋 Métricas")
-            # Tabla en formato DF con estilo
+            st.subheader("📋 Métricas Detalladas")
+            # Presentación en formato DataFrame con estilo de colores
             st.dataframe(
-                df_resultados.style.format({"Probabilidad": "{:.2f}%"})
-                .background_gradient(cmap="Greens", subset=["Probabilidad"]),
+                df_resultados.style.format({"Probabilidad Supervivencia": "{:.2f}%"})
+                .background_gradient(cmap="Greens", subset=["Probabilidad Supervivencia"]),
                 use_container_width=True,
                 hide_index=True
             )
-
-            # Métrica destacada a 60 meses
+            
             p_final = probabilidades[-1]
-            st.metric("Supervivencia a 5 años", f"{p_final:.1f}%")
+            st.metric("Pronóstico a 5 años (60m)", f"{p_final:.1f}%")
 
-        # Barra de progreso final (Fix float32)
-        st.write("**Estado del pronóstico a largo plazo:**")
-        st.progress(float(p_final / 100))
+        st.info(f"**Interpretación:** El paciente tiene una probabilidad estimada del {p_final:.1f}% de supervivencia a largo plazo según los parámetros ingresados.")
