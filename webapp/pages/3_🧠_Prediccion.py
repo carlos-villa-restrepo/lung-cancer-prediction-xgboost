@@ -5,6 +5,8 @@ import os
 import plotly.graph_objects as go
 from utils import set_design
 
+
+
 # 1. Configuración y Estética
 st.set_page_config(page_title="Predicción Individual", layout="wide")
 set_design("prediction")
@@ -20,14 +22,14 @@ def cargar_referencia():
 
 
 @st.cache_resource
-def cargar_todos_los_modelos():
-    cortes = [12, 24, 36, 48, 60]
-    modelos = {}
-    for m in cortes:
-        path = f"model/pipeline_{m}m.pkl"
-        if os.path.exists(path):
-            modelos[m] = joblib.load(path)
-    return modelos
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ruta_modelo = os.path.join(BASE_DIR, "model", "nombre_de_tu_modelo.joblib")
+
+if os.path.exists(ruta_modelo):
+    model = joblib.load(ruta_modelo)
+    st.success("Modelo cargado correctamente.")
+else:
+    st.error(f"No se encontró el modelo en: {ruta_modelo}")
 
 
 df_ref = cargar_referencia()

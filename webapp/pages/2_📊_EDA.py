@@ -13,26 +13,24 @@ st.title("Exploración de Datos (EDA)")
 st.sidebar.header("Configuración de Datos")
 uploaded_file = st.sidebar.file_uploader("Sube tu archivo CSV", type=["csv"])
 
-df = None
+# Buscamos la ruta absoluta del proyecto para no fallar
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ruta_default = os.path.join(BASE_DIR, "data", "EDA_FINAL.csv")
+
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
     st.success("Archivo subido con éxito.")
 else:
-    # Intentamos varias rutas comunes para evitar errores de despliegue
-    rutas_posibles = [
-        "webapp/data/EDA_FINAL.csv", # Si ejecutas desde la raíz del repo
-        "data/EDA_FINAL.csv",        # Si ejecutas desde dentro de /webapp
-        "../data/EDA_FINAL.csv"      # Ruta relativa desde /pages
-    ]
-    
-    for ruta in rutas_posibles:
-        if os.path.exists(ruta):
-            df = pd.read_csv(ruta)
-            st.info(f"Cargando dataset predeterminado desde: {ruta}")
-            break
-
-    if df is None:
-        st.warning("No se encontró el dataset en ninguna de las rutas predefinidas.")
+    if os.path.exists(ruta_default):
+        df = pd.read_csv(ruta_default)
+        st.info("Cargando dataset predeterminado.")
+    else:
+        # Intento de respaldo si la estructura cambia en el despliegue
+        ruta_respaldo = "webapp/data/EDA_FINAL.csv"
+        if os.path.exists(ruta_respaldo):
+            df = pd.read_csv(ruta_respaldo)
+        else:
+            st.error(f"No se encontró el archivo. Ruta buscada: {ruta_default}")
 
 # Mostrar información en DataFrames [2026-01-28]
 if df is not None:
