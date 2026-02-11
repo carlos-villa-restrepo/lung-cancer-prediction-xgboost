@@ -18,7 +18,7 @@ if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
     st.success("Archivo subido con éxito.")
 else:
-    ruta_default = "data/EDA_FINAL.csv"
+    ruta_default = "../webapp/data/EDA_FINAL.csv"
     if os.path.exists(ruta_default):
         df = pd.read_csv(ruta_default)
         st.info("Cargando dataset predeterminado.")
