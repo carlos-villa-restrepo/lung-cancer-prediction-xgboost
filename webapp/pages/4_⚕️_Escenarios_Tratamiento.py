@@ -19,7 +19,7 @@ def cargar_modelos():
     cortes = [12, 24, 36, 48, 60]
     modelos = {}
     for m in cortes:
-        path = f"model/pipeline_{m}m.pkl"
+        path = f"../webapp/model/pipeline_{m}m.pkl"
         if os.path.exists(path):
             modelos[m] = joblib.load(path)
     return modelos

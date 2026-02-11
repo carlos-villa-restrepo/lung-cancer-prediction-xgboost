@@ -18,12 +18,21 @@ if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
     st.success("Archivo subido con éxito.")
 else:
-    ruta_default = "../webapp/data/EDA_FINAL.csv"
-    if os.path.exists(ruta_default):
-        df = pd.read_csv(ruta_default)
-        st.info("Cargando dataset predeterminado.")
-    else:
-        st.warning("No se encontró el dataset.")
+    # Intentamos varias rutas comunes para evitar errores de despliegue
+    rutas_posibles = [
+        "webapp/data/EDA_FINAL.csv", # Si ejecutas desde la raíz del repo
+        "data/EDA_FINAL.csv",        # Si ejecutas desde dentro de /webapp
+        "../data/EDA_FINAL.csv"      # Ruta relativa desde /pages
+    ]
+    
+    for ruta in rutas_posibles:
+        if os.path.exists(ruta):
+            df = pd.read_csv(ruta)
+            st.info(f"Cargando dataset predeterminado desde: {ruta}")
+            break
+
+    if df is None:
+        st.warning("No se encontró el dataset en ninguna de las rutas predefinidas.")
 
 # Mostrar información en DataFrames [2026-01-28]
 if df is not None:
