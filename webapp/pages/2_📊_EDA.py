@@ -18,7 +18,7 @@ if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
     st.success("Archivo subido con éxito.")
 else:
-    ruta_default = "data/df_eda_final.csv"
+    ruta_default = "data/EDA_FINAL.csv"
     if os.path.exists(ruta_default):
         df = pd.read_csv(ruta_default)
         st.info("Cargando dataset predeterminado.")
@@ -41,3 +41,4 @@ if df is not None:
 
     st.bar_chart(conteo.set_index(col_target))
     st.dataframe(conteo, use_container_width=True)
+
