@@ -211,4 +211,4 @@ Key Clinical Insights:
 The surgical factor: Surgical intervention was identified as the most influential non-biological predictor, capable of increasing the probability of 5-year survival by a high percentage in the localized stage.
 
 ## 🌐 Live Demo
-*[Link to be added upon deployment]*
+*[[Link to be added upon deployment](https://sp-ml-20-final-project-g1-sehbqc6skgeddvrv4xzjhj.streamlit.app)]*
