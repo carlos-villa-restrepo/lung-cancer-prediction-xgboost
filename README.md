@@ -46,6 +46,7 @@ The repository is organized following professional data engineering standards:
 ├── 📄 Home.py             # App Entry point
 └── 📄 requirements.txt    # Project dependencies
 
+```
 ---
 
 ## 💻 Installation & Usage
