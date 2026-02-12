@@ -1,20 +1,26 @@
 import streamlit as st
 import pandas as pd
-import os
-from utils import set_design
 from pathlib import Path
+from utils import set_design
 
-# 1. CONFIGURACIÓN
 st.set_page_config(page_title="EDA", layout="wide")
 set_design("eda")
 
 st.title("Exploración de Datos (EDA)")
 
-BASE_DIR = Path(__file__).resolve().parents[1]   # apunta a /webapp
+# SIDEBAR
+st.sidebar.header("Configuración de Datos")
+uploaded_file = st.sidebar.file_uploader("Sube tu archivo CSV", type=["csv"])
+
+# RUTAS ROBUSTAS
+BASE_DIR = Path(__file__).resolve().parents[1]   # /webapp
 DATA_PATH = BASE_DIR / "data" / "EDA_FINAL.csv"
+
+df = None
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
+    st.info("✅ Dataset cargado desde archivo subido")
 
 elif DATA_PATH.exists():
     df = pd.read_csv(DATA_PATH)
