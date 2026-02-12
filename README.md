@@ -64,9 +64,12 @@ To run this project locally, follow these steps:
    ```bash
    streamlit run Home.py
 
-📊 Pruebas de Funcionamiento
-Prueba de URL segura Prueba no-spam<img width="1799" height="908" alt="image" src="https://github.com/user-attachments/assets/2db1c688-da0d-4db6-a66e-27067694eae3" />
+---
 
+## 📱 App Preview
+![Lung Cancer Diagnosis Home](assets/home-page-streamlit.png)
 
-Prueba de URL SPAM Prueba spam
+*Vista principal de la plataforma de análisis de supervivencia.*
+
+---
 
