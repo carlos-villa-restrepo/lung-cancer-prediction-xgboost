@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import os
 from utils import set_design
+from pathlib import Path
 
 # 1. CONFIGURACIÓN
 st.set_page_config(page_title="EDA", layout="wide")
