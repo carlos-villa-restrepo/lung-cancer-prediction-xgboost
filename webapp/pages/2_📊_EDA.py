@@ -9,34 +9,18 @@ set_design("eda")
 
 st.title("Exploración de Datos (EDA)")
 
-# 2. LÓGICA DE RUTAS (Basada en tu estructura real)
-df = None
-
-# Sidebar para subir archivo manualmente
-st.sidebar.header("Configuración de Datos")
-uploaded_file = st.sidebar.file_uploader("Sube tu archivo CSV", type=["csv"])
+BASE_DIR = Path(__file__).resolve().parents[1]   # apunta a /webapp
+DATA_PATH = BASE_DIR / "data" / "EDA_FINAL.csv"
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
-else:
-    # Definimos las rutas exactas según tu imagen de VS Code
-    rutas_a_probar = [
-        "../data/processed/EDA_FINAL.csv",    # Ruta 1: Directorio raíz (processed)
-        "../webapp/data/EDA_FINAL.csv",       # Ruta 2: Dentro de webapp
-        "../data/EDA_FINAL.csv"               # Ruta 3: Genérica en data
-    ]
-    
-    for ruta in rutas_a_probar:
-        if os.path.exists(ruta):
-            try:
-                df = pd.read_csv(ruta)
-                st.info(f"✅ Dataset cargado desde: {ruta}")
-                break
-            except Exception as e:
-                continue
 
-    if df is None:
-        st.error("⚠️ No se encontró el archivo EDA_FINAL.csv en las rutas conocidas.")
+elif DATA_PATH.exists():
+    df = pd.read_csv(DATA_PATH)
+    st.info(f"✅ Dataset cargado desde: {DATA_PATH}")
+
+else:
+    st.error("⚠️ No se encontró el archivo EDA_FINAL.csv.")
 
 # 3. MÉTRICAS EN FORMATO DATAFRAME [2026-02-12]
 if df is not None:
