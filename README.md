@@ -57,3 +57,16 @@ To run this project locally, follow these steps:
    ```bash
    git clone [https://github.com/carlos-villa-restrepo/lung-cancer-prediction-xgboost.git](https://github.com/carlos-villa-restrepo/lung-cancer-prediction-xgboost.git)
    cd lung-cancer-prediction-xgboost
+2. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+3. **Run the Streamlit application:**
+   ```bash
+   streamlit run Home.py
+
+📊 Pruebas de Funcionamiento
+Prueba de URL segura Prueba no-spam<img width="1799" height="908" alt="image" src="https://github.com/user-attachments/assets/2db1c688-da0d-4db6-a66e-27067694eae3" />
+
+
+Prueba de URL SPAM Prueba spam
+
