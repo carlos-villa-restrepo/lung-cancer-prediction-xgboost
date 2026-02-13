@@ -18,7 +18,7 @@ Lung cancer prognosis traditionally overlooks socioeconomic barriers. This solut
 ### 🧠 Multi-Milestone Architecture
 Unlike a single regression, I developed **5 independent XGBoost models**, each optimized for specific intervals (12, 24, 36, 48, and 60 months). 
 
-* **Data Source:** SEER Dataset (60,000+ records, 2012-2022).
+* **Data Source:** SEER Dataset (500,000+ records, 2012-2022).
 * **Feature Engineering:** Consolidated complex cancer stages and mapped treatment combinations with surgical intervention and income as primary predictors.
 * **Monotonic Logic:** Implemented a post-processing layer to ensure survival curves maintain clinical coherence (consistently decreasing over time).
 
